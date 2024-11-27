@@ -1,0 +1,224 @@
+Exercice1
+client.java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+public class Client {
+    public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("localhost", 12345);
+            BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader serverResponse = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            
+            String message;
+            System.out.println("Entrez un message (tapez 'bye' pour quitter) :");
+            
+            // Boucle pour envoyer plusieurs messages
+            while (true) {
+                message = input.readLine();
+                output.println(message); // Envoie du message au serveur
+                
+                if (message.equalsIgnoreCase("bye")) {
+                    System.out.println("Déconnexion...");
+                    break;
+                }
+                
+                // Lecture de la réponse du serveur
+                String response = serverResponse.readLine();
+                System.out.println("Réponse du serveur : " + response);
+            }
+            
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Serveur.java
+public class Serveur {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(12345);
+            System.out.println("Serveur démarré. En attente de connexion...");
+            
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connecté.");
+                
+                BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+                
+                String clientMessage;
+                while ((clientMessage = input.readLine()) != null) {
+                    if (clientMessage.equalsIgnoreCase("bye")) {
+                        System.out.println("Client déconnecté.");
+                        break;
+                    }
+                    output.println(clientMessage); // Envoie du message reçu au client
+                }
+                
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+Exercice2: Le serveur capitalise le message du client
+
+public class Serveur {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(12345);
+            System.out.println("Serveur démarré. En attente de connexion...");
+            
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connecté.");
+                
+                BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+                
+                String clientMessage;
+                while ((clientMessage = input.readLine()) != null) {
+                    if (clientMessage.equalsIgnoreCase("bye")) {
+                        System.out.println("Client déconnecté.");
+                        break;
+                    }
+                    // Capitalisation du message avant de l'envoyer au client
+                    output.println(clientMessage.toUpperCase());
+                }
+                
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Exercice 3:
+Client.java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+public class Client {
+    public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("localhost", 12345);
+            BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader serverResponse = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            
+            String message;
+            System.out.println("Entrez une opération (ex: 5 + 3) ou tapez 'bye' pour quitter :");
+            
+            while (true) {
+                message = input.readLine();
+                output.println(message);
+                
+                if (message.equalsIgnoreCase("bye")) {
+                    System.out.println("Déconnexion...");
+                    break;
+                }
+                
+                String response = serverResponse.readLine();
+                System.out.println("Réponse du serveur : " + response);
+            }
+            
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+serveur.java
+public class Serveur {
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(12345);
+            System.out.println("Serveur démarré. En attente de connexion...");
+            
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connecté.");
+                
+                BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+                
+                String clientMessage;
+                while ((clientMessage = input.readLine()) != null) {
+                    if (clientMessage.equalsIgnoreCase("bye")) {
+                        System.out.println("Client déconnecté.");
+                        break;
+                    }
+                    // Traitement de l'opération
+                    String response = traiterOperation(clientMessage);
+                    output.println(response);
+                }
+                
+                clientSocket.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String traiterOperation(String message) {
+        String[] tokens = message.split(" ");
+        if (tokens.length == 3) {
+            try {
+                double operande1 = Double.parseDouble(tokens[0]);
+                String operateur = tokens[1];
+                double operande2 = Double.parseDouble(tokens[2]);
+                
+                double resultat = 0;
+                switch (operateur) {
+                    case "+":
+                        resultat = operande1 + operande2;
+                        break;
+                    case "-":
+                        resultat = operande1 - operande2;
+                        break;
+                    case "*":
+                        resultat = operande1 * operande2;
+                        break;
+                    case "/":
+                        if (operande2 != 0) {
+                            resultat = operande1 / operande2;
+                        } else {
+                            return "Erreur: division par zéro.";
+                        }
+                        break;
+                    default:
+                        return "Opérateur invalide.";
+                }
+                return "Résultat: " + resultat;
+            } catch (NumberFormatException e) {
+                return "Erreur: format de nombre invalide.";
+            }
+        }
+        return "Erreur: format d'opération invalide.";
+    }
+}
+
+
+
+
+
